@@ -12,7 +12,7 @@ jobs:
   linux-krokiet-gui:
     strategy:
       matrix:
-        toolchain: [ stable, 1.75.0 ]
+        toolchain: [ stable, 1.79.0 ]
         type: [ release ]
     runs-on: ubuntu-20.04
     steps:
@@ -39,7 +39,7 @@ jobs:
   linux-krokiet-gui-heif:
     strategy:
       matrix:
-        toolchain: [ stable, 1.75.0 ]
+        toolchain: [ stable, 1.79.0 ]
         type: [ release ]
     runs-on: ubuntu-22.04
     steps:
@@ -69,7 +69,7 @@ jobs:
   linux-gui:
     strategy:
       matrix:
-        toolchain: [ stable, 1.75.0 ]
+        toolchain: [ stable, 1.79.0 ]
         type: [ release ]
     runs-on: ubuntu-22.04
     steps:
@@ -135,18 +135,29 @@ jobs:
           pwd
           wget -c "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh"
           wget -c "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage"
+          wget -c "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
           chmod +x linuxdeploy-plugin-gtk.sh
           chmod +x linuxdeploy-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
           mkdir -p AppDir/usr/bin
           pwd
           cp target/release/czkawka_gui AppDir/usr/bin
-          ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin gtk --output appimage --icon-file data/icons/com.github.qarmin.czkawka.svg --desktop-file data/com.github.qarmin.czkawka.desktop
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin gtk --icon-file data/icons/com.github.qarmin.czkawka.svg --desktop-file data/com.github.qarmin.czkawka.desktop
+          ./appimagetool --comp zstd --mksquashfs-opt -Xcompression-level --mksquashfs-opt 20 \
+            -u "gh-releases-zsync|$GITHUB_REPOSITORY_OWNER|czkawka|latest|*.AppImage.zsync" \
+            ./AppDir
 
       - name: Store Linux Appimage GUI
         uses: actions/upload-artifact@v4
         with:
           name: czkawka_gui-appimage-${{ runner.os }}-${{ matrix.toolchain }}
           path: Czkawka*.AppImage
+
+      - name: Store Linux Appimage GUI Zsync
+        uses: actions/upload-artifact@v4
+        with:
+          name: czkawka_gui-appimage-${{ runner.os }}-${{ matrix.toolchain }}.zsync
+          path: Czkawka*.AppImage.zsync
 
       - name: Minimal AppImage
         run: |
